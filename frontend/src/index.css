@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-ink-900 text-zinc-100 antialiased;
+    background-image:
+      radial-gradient(900px 500px at 12% -8%, rgba(99, 102, 241, 0.14), transparent 60%),
+      radial-gradient(700px 420px at 88% 0%, rgba(167, 139, 250, 0.1), transparent 62%),
+      radial-gradient(800px 600px at 50% 120%, rgba(56, 189, 248, 0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-indigo-500/30 text-white;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-white/[0.07] bg-white/[0.025] shadow-card backdrop-blur-sm;
+  }
+
+  .field {
+    @apply w-full rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-sm text-zinc-100
+           placeholder:text-zinc-600 focus:border-indigo-400/60 focus:outline-none focus:ring-2
+           focus:ring-indigo-500/20;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04]
+           px-2.5 py-1 text-[11px] font-medium text-zinc-300;
+  }
+}
