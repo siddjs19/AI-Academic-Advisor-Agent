@@ -143,6 +143,9 @@ def generate(db: Session, student_id: int, *, topics: list[models.Topic], mode: 
 
     if created == 0:
         created = _from_bank(db, quiz, topics, count)
+        if created:
+            quiz.source = "bank"  # be honest about where these questions came from
+
     if created == 0:
         db.rollback()
         raise LLMError(

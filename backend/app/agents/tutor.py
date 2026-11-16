@@ -81,15 +81,33 @@ def explain(db: Session, student_id: int, *, topic: models.Topic | None, questio
             "evidence": evidence,
         }
 
+    mastery_line = f"{mastery:.2f}" if mastery is not None else "unknown (no topic matched)"
+    attempts = evidence["attempts"] if evidence else 0
     prompt = [
         f"Topic: {topic.name if topic else 'general'} ({topic.course.name if topic else 'coursework'})",
-        f"Student mastery estimate: {mastery:.2f} (0-1, from {evidence['attempts'] if evidence else 0} graded answers)",
-        f"Level: {level} — {LEVELS.get(level, LEVELS['intermediate'])}",
-        f"Question: {question}",
+        f"Student mastery estimate: {mastery_line} (0-1, from {attempts} graded answers)",
     ]
     if context:
         prompt.append(context)
-    answer = llm.complete_text(TUTOR_SYSTEM, "\n\n".join(prompt))
+    try:
+        answer = llm.complete_text(TUTOR_SYSTEM, "\n\n".join(prompt))
+    except LLMError as exc:
+        return {
+            "agent": "teaching",
+            "answer": (
+                f"The model call failed, so I won't pretend to have answered.\n\n"
+                f"Provider said: {exc}\n\n"
+                "Check LLM_MODEL against the models your key can use, and the quota on your plan. "
+                "Everything else in the app keeps working — planning, grading, revision and analytics "
+                "do not need a model."
+            ),
+            "llm_required": True,
+            "llm_error": str(exc),
+            "context_used": bool(context),
+            "mastery": mastery,
+            "evidence": evidence,
+        }
+
     return {
         "agent": "teaching",
         "answer": answer,

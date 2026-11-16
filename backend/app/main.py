@@ -9,7 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
+from .agents.llm import LLMError
 from .api import router
 from .config import settings
 from .db import SessionLocal, init_db
@@ -37,6 +40,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(router)
+
+@app.exception_handler(LLMError)
+async def llm_failure(_: Request, exc: LLMError) -> JSONResponse:
+    """A provider problem is a 502 with the reason, never an opaque 500."""
+    return JSONResponse(status_code=502, content={"detail": f"model provider error: {exc}"})
+
 
 if (DIST / "assets").exists():
     app.mount("/assets", StaticFiles(directory=str(DIST / "assets")), name="assets")

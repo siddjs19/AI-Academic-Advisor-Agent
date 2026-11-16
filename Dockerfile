@@ -16,6 +16,9 @@ RUN pip install -r requirements.txt
 COPY backend/ ./
 COPY --from=ui /ui/dist /app/frontend/dist
 
-ENV DATABASE_URL=sqlite:////tmp/preppilot.db
+ENV DATABASE_URL=sqlite:////app/data/preppilot.db
+RUN mkdir -p /app/data
+VOLUME ["/app/data"]
 EXPOSE 8000
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

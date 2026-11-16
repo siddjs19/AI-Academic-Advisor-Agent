@@ -56,12 +56,16 @@ class GeminiLLM:
         }
         if json_mode:
             body["generationConfig"]["responseMimeType"] = "application/json"
-        r = httpx.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
-            params={"key": self.api_key},
-            json=body,
-            timeout=90,
-        )
+        try:
+            r = httpx.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
+                params={"key": self.api_key},
+                json=body,
+                timeout=90,
+            )
+        except httpx.HTTPError as exc:
+            raise LLMError(f"{self.name}: could not reach the provider ({exc.__class__.__name__})") from exc
+
         if r.status_code >= 400:
             raise LLMError(f"gemini {r.status_code}: {r.text[:180]}")
         return r.json()["candidates"][0]["content"]["parts"][0]["text"]
@@ -89,12 +93,16 @@ class GroqLLM:
         }
         if json_mode:
             body["response_format"] = {"type": "json_object"}
-        r = httpx.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json=body,
-            timeout=90,
-        )
+        try:
+            r = httpx.post(
+                f"https://api.groq.com/openai/v1/chat/completions",
+                params={"key": self.api_key},
+                json=body,
+                timeout=90,
+            )
+        except httpx.HTTPError as exc:
+            raise LLMError(f"{self.name}: could not reach the provider ({exc.__class__.__name__})") from exc
+
         if r.status_code >= 400:
             raise LLMError(f"groq {r.status_code}: {r.text[:180]}")
         return r.json()["choices"][0]["message"]["content"]
@@ -126,7 +134,16 @@ class OpenAICompatLLM:
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        r = httpx.post(f"{self.base_url}/chat/completions", headers=headers, json=body, timeout=90)
+        try:
+            r = httpx.post(
+                f"{self.base_url}/chat/completions",
+                params={"key": self.api_key},
+                json=body,
+                timeout=90,
+            )
+        except httpx.HTTPError as exc:
+            raise LLMError(f"{self.name}: could not reach the provider ({exc.__class__.__name__})") from exc
+
         if r.status_code >= 400:
             raise LLMError(f"provider {r.status_code}: {r.text[:180]}")
         return r.json()["choices"][0]["message"]["content"]

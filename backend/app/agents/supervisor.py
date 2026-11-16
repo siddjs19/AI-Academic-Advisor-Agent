@@ -80,15 +80,23 @@ def resolve_topic(db: Session, student_id: int, message: str) -> models.Topic | 
             .where(models.Course.student_id == student_id)
         )
     )
+    def stem(word: str) -> str:
+        return word[:-1] if word.endswith("s") else word
+
     low = message.lower()
+    msg_stems = {stem(w) for w in re.findall(r"[a-z]{4,}", low)}
     best: tuple[int, models.Topic] | None = None
     for topic in topics:
         name = topic.name.lower()
         if name in low:
-            score = len(name)
+            score = 100 + len(name)
         else:
-            words = [w for w in re.findall(r"[a-z]{4,}", name) if w in low]
-            score = sum(len(w) for w in words)
+            # compare stems so "deadlock" matches "deadlocks", "graph" matches "graphs"
+            name_stems = {stem(w) for w in re.findall(r"[a-z]{4,}", name)}
+            shared = msg_stems & name_stems
+            score = sum(len(w) for w in shared) * 2
+            if not shared and any(w in low for w in name_stems if len(w) >= 6):
+                score = 6
         if score and (best is None or score > best[0]):
             best = (score, topic)
     return best[1] if best else None
